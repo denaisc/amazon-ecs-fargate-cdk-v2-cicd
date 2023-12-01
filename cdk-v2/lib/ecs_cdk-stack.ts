@@ -11,23 +11,30 @@ import { Construct } from 'constructs';
 
 export class EcsCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+
     super(scope, id, props);
 
     const githubUserName = new cdk.CfnParameter(this, "githubUserName", {
         type: "String",
-        description: "Github username for source code repository"
+        description: "Github username for source code repository",
+        default: "denaisc"
+    })
+
+    const accountNumber = new cdk.CfnParameter(this, "accountNumber", {
+      type: "String",
+      description: "Account number used"
     })
 
     const githubRepository = new cdk.CfnParameter(this, "githubRespository", {
         type: "String",
         description: "Github source code repository",
-        default: "amazon-ecs-fargate-cdk-v2-cicd" 
+        default: "amazon-ecs-fargate-cdk-v2-cicd"
     })
 
     const githubPersonalTokenSecretName = new cdk.CfnParameter(this, "githubPersonalTokenSecretName", {
         type: "String",
         description: "The name of the AWS Secrets Manager Secret which holds the GitHub Personal Access Token for this project.",
-        default: "/aws-samples/amazon-ecs-fargate-cdk-v2-cicd/github/personal_access_token" 
+        default: "/aws-samples/amazon-ecs-fargate-cdk-v2-cicd/github/personal_access_token"
     })
     //default: `${this.stackName}`
 
@@ -76,13 +83,18 @@ export class EcsCdkStack extends cdk.Stack {
             ]
     });
 
+
+    //task definition for graviton docker image
+
+
+
     const taskDef = new ecs.FargateTaskDefinition(this, "ecs-taskdef", {
       taskRole: taskrole
     });
 
     taskDef.addToExecutionRolePolicy(executionRolePolicy);
 
-    const baseImage = 'public.ecr.aws/amazonlinux/amazonlinux:2022'
+    const baseImage = accountNumber + '.dkr.ecr.eu-west-1.amazonaws.com/ecr-technical-debt:latest'
     const container = taskDef.addContainer('flask-app', {
       image: ecs.ContainerImage.fromRegistry(baseImage),
       memoryLimitMiB: 256,
